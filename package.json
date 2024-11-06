@@ -64,6 +64,8 @@
     "vary": "~1.1.2"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "^8.6.0",
+    "@stryker-mutator/mocha-runner": "^8.6.0",
     "after": "0.8.2",
     "connect-redis": "3.4.2",
     "cookie-parser": "1.4.6",
