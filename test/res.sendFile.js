@@ -11,6 +11,9 @@ var path = require('path');
 var fixtures = path.join(__dirname, 'fixtures');
 var utils = require('./support/utils');
 
+var FIXTURES_PATH = path.join(__dirname, 'fixtures')
+var options = { root: FIXTURES_PATH }
+
 var describeAsyncHooks = typeof asyncHooks.AsyncLocalStorage === 'function'
   ? describe
   : describe.skip
@@ -42,7 +45,7 @@ describe('res', function(){
     })
 
     it('should transfer a file', function (done) {
-      var app = createApp(path.resolve(fixtures, 'name.txt'));
+      var app = createApp('name.txt', options);
 
       request(app)
       .get('/')
@@ -50,7 +53,7 @@ describe('res', function(){
     });
 
     it('should transfer a file with special characters in string', function (done) {
-      var app = createApp(path.resolve(fixtures, '% of dogs.txt'));
+      var app = createApp('% of dogs.txt', options);
 
       request(app)
       .get('/')
@@ -58,7 +61,7 @@ describe('res', function(){
     });
 
     it('should include ETag', function (done) {
-      var app = createApp(path.resolve(fixtures, 'name.txt'));
+      var app = createApp('name.txt', options);
 
       request(app)
       .get('/')
@@ -67,7 +70,7 @@ describe('res', function(){
     });
 
     it('should 304 when ETag matches', function (done) {
-      var app = createApp(path.resolve(fixtures, 'name.txt'));
+      var app = createApp('name.txt', options);
 
       request(app)
       .get('/')
@@ -104,7 +107,7 @@ describe('res', function(){
     });
 
     it('should send cache-control by default', function (done) {
-      var app = createApp(path.resolve(__dirname, 'fixtures/name.txt'))
+      var app = createApp('name.txt', options)
 
       request(app)
         .get('/')
@@ -125,7 +128,7 @@ describe('res', function(){
 
       app.use(function (req, res) {
         res.contentType('application/x-bogus');
-        res.sendFile(path.resolve(fixtures, 'name.txt'));
+        res.sendFile('name.txt', options);
       });
 
       request(app)
@@ -141,7 +144,7 @@ describe('res', function(){
 
       app.use(function (req, res) {
         setImmediate(function () {
-          res.sendFile(path.resolve(fixtures, 'name.txt'));
+          res.sendFile('name.txt', options);
           setTimeout(function () {
             cb(error)
           }, 10)
@@ -166,7 +169,7 @@ describe('res', function(){
   describe('.sendFile(path, fn)', function () {
     it('should invoke the callback when complete', function (done) {
       var cb = after(2, done);
-      var app = createApp(path.resolve(fixtures, 'name.txt'), cb);
+      var app = createApp('name.txt', options, cb);
 
       request(app)
       .get('/')
@@ -179,7 +182,7 @@ describe('res', function(){
 
       app.use(function (req, res) {
         setImmediate(function () {
-          res.sendFile(path.resolve(fixtures, 'name.txt'), function (err) {
+          res.sendFile('name.txt', options, function (err) {
             assert.ok(err)
             assert.strictEqual(err.code, 'ECONNABORTED')
             cb()
@@ -202,7 +205,7 @@ describe('res', function(){
 
       app.use(function (req, res) {
         onFinished(res, function () {
-          res.sendFile(path.resolve(fixtures, 'name.txt'), function (err) {
+          res.sendFile('name.txt', options, function (err) {
             assert.ok(err)
             assert.strictEqual(err.code, 'ECONNABORTED')
             cb()
@@ -224,7 +227,7 @@ describe('res', function(){
       var cb = after(2, done);
 
       app.use(function (req, res) {
-        res.sendFile(path.resolve(fixtures, 'name.txt'), cb);
+        res.sendFile('name.txt', options, cb);
       });
 
       request(app)
@@ -237,7 +240,7 @@ describe('res', function(){
       var cb = after(3, done);
 
       app.use(function (req, res) {
-        res.sendFile(path.resolve(fixtures, 'name.txt'), cb);
+        res.sendFile('name.txt', options, cb);
       });
 
       request(app)
@@ -279,7 +282,7 @@ describe('res', function(){
         })
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'name.txt'), function (err) {
+          res.sendFile('name.txt', options, function (err) {
             if (err) return cb(err)
 
             var local = req.asyncLocalStorage.getStore()
@@ -328,7 +331,7 @@ describe('res', function(){
 
   describe('.sendFile(path, options)', function () {
     it('should pass options to send module', function (done) {
-      request(createApp(path.resolve(fixtures, 'name.txt'), { start: 0, end: 1 }))
+      request(createApp('name.txt', {root: FIXTURES_PATH, start: 0, end: 1 }))
       .get('/')
       .expect(200, 'to', done)
     })
@@ -339,7 +342,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'nums.txt'), {
+            res.sendFile('nums.txt', {
+              root: FIXTURES_PATH,
               acceptRanges: true
             })
           })
@@ -356,7 +360,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'nums.txt'), {
+            res.sendFile('nums.txt', {
+              root: FIXTURES_PATH,
               acceptRanges: true
             })
           })
@@ -373,7 +378,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'nums.txt'), {
+            res.sendFile('nums.txt', {
+              root: FIXTURES_PATH,
               acceptRanges: false
             })
           })
@@ -389,7 +395,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'nums.txt'), {
+            res.sendFile('nums.txt', {
+              root: FIXTURES_PATH,
               acceptRanges: false
             })
           })
@@ -408,7 +415,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               cacheControl: true
             })
           })
@@ -426,7 +434,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               cacheControl: false
             })
           })
@@ -446,7 +455,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, '.name'), {
+            res.sendFile('.name', {
+              root: FIXTURES_PATH,
               dotfiles: 'allow'
             })
           })
@@ -464,7 +474,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, '.name'), {
+            res.sendFile('.name', {
+              root: FIXTURES_PATH,
               dotfiles: 'deny'
             })
           })
@@ -482,7 +493,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, '.name'), {
+            res.sendFile('.name', {
+              root: FIXTURES_PATH,
               dotfiles: 'ignore'
             })
           })
@@ -501,7 +513,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'user.html'), {
+          res.sendFile('user.html', {
+            root: FIXTURES_PATH,
             headers: {
               'X-Foo': 'Bar',
               'X-Bar': 'Foo'
@@ -521,7 +534,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'user.html'), {
+          res.sendFile('user.html', {
+            root: FIXTURES_PATH,
             headers: {
               'X-Foo': 'Bar',
               'x-foo': 'bar'
@@ -540,7 +554,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'user.html'), {
+          res.sendFile('user.html', {
+            root: FIXTURES_PATH,
             headers: {
               'Content-Type': 'text/x-custom'
             }
@@ -579,7 +594,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               immutable: true
             })
           })
@@ -597,7 +613,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               immutable: false
             })
           })
@@ -617,7 +634,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               lastModified: true
             })
           })
@@ -633,7 +651,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               lastModified: true
             })
           })
@@ -650,7 +669,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               lastModified: false
             })
           })
@@ -666,7 +686,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               lastModified: false
             })
           })
@@ -686,7 +707,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'user.html'), {
+          res.sendFile('user.html', {
+            root: FIXTURES_PATH,
             maxAge: 20000
           })
         })
@@ -702,7 +724,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'user.html'), {
+          res.sendFile('user.html', {
+            root: FIXTURES_PATH,
             maxAge: 99999999999
           })
         })
@@ -718,7 +741,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'user.html'), {
+          res.sendFile('user.html', {
+            root: FIXTURES_PATH,
             maxAge: -20000
           })
         })
@@ -734,7 +758,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.sendFile(path.resolve(fixtures, 'user.html'), {
+          res.sendFile('user.html', {
+            root: FIXTURES_PATH,
             maxAge: 21911.23
           })
         })
@@ -751,7 +776,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               cacheControl: false,
               maxAge: 20000
             })
@@ -770,7 +796,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               maxAge: '20000'
             })
           })
@@ -786,7 +813,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               maxAge: '20s'
             })
           })
@@ -802,7 +830,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               maxAge: '20m'
             })
           })
@@ -818,7 +847,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.sendFile(path.resolve(fixtures, 'user.html'), {
+            res.sendFile('user.html', {
+              root: FIXTURES_PATH,
               maxAge: '20d'
             })
           })

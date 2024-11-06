@@ -10,6 +10,7 @@ var request = require('supertest');
 var utils = require('./support/utils')
 
 var FIXTURES_PATH = path.join(__dirname, 'fixtures')
+var options = { root: FIXTURES_PATH }
 
 var describeAsyncHooks = typeof asyncHooks.AsyncLocalStorage === 'function'
   ? describe
@@ -21,7 +22,7 @@ describe('res', function(){
       var app = express();
 
       app.use(function(req, res){
-        res.download('test/fixtures/user.html');
+        res.download('user.html', options)
       });
 
       request(app)
@@ -35,7 +36,7 @@ describe('res', function(){
       var app = express()
 
       app.get('/', function (req, res) {
-        res.download('test/fixtures/user.html')
+        res.download('user.html', options)
       })
 
       request(app)
@@ -48,7 +49,7 @@ describe('res', function(){
       var app = express()
 
       app.get('/', function (req, res) {
-        res.download('test/fixtures/user.html')
+        res.download('user.html', options)
       })
 
       request(app)
@@ -64,7 +65,7 @@ describe('res', function(){
       var app = express();
 
       app.use(function(req, res){
-        res.download('test/fixtures/user.html', 'document');
+        res.download('user.html', 'document', options)
       });
 
       request(app)
@@ -81,7 +82,7 @@ describe('res', function(){
       var cb = after(2, done);
 
       app.use(function(req, res){
-        res.download('test/fixtures/user.html', cb);
+        res.download('user.html', options, cb)
       });
 
       request(app)
@@ -103,14 +104,15 @@ describe('res', function(){
         })
 
         app.use(function (req, res) {
-          res.download('test/fixtures/name.txt', function (err) {
-            if (err) return cb(err)
+          res.download('name.txt', options,
+            function (err) {
+              if (err) return cb(err)
 
-            var local = req.asyncLocalStorage.getStore()
+              var local = req.asyncLocalStorage.getStore()
 
-            assert.strictEqual(local.foo, 'bar')
-            cb()
-          })
+              assert.strictEqual(local.foo, 'bar')
+              cb()
+            })
         })
 
         request(app)
@@ -156,7 +158,8 @@ describe('res', function(){
       var app = express()
 
       app.use(function (req, res) {
-        res.download('test/fixtures/.name', {
+        res.download('.name', {
+          root: FIXTURES_PATH,
           dotfiles: 'allow',
           maxAge: '4h'
         })
@@ -176,7 +179,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('test/fixtures/user.html', {
+          res.download('user.html', {
+            root: FIXTURES_PATH,
             headers: {
               'X-Foo': 'Bar',
               'X-Bar': 'Foo'
@@ -196,7 +200,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('test/fixtures/user.html', {
+          res.download('user.html', {
+            root: FIXTURES_PATH,
             headers: {
               'X-Foo': 'Bar',
               'x-foo': 'bar'
@@ -215,7 +220,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('test/fixtures/user.html', {
+          res.download('user.html', {
+            root: FIXTURES_PATH,
             headers: {
               'Content-Type': 'text/x-custom'
             }
@@ -252,7 +258,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.download('test/fixtures/user.html', {
+            res.download('user.html', {
+              root: FIXTURES_PATH,
               headers: {
                 'Content-Disposition': 'inline'
               }
@@ -270,7 +277,8 @@ describe('res', function(){
           var app = express()
 
           app.use(function (req, res) {
-            res.download('test/fixtures/user.html', {
+            res.download('user.html', {
+              root: FIXTURES_PATH,
               headers: {
                 'content-disposition': 'inline'
               }
@@ -291,9 +299,7 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('name.txt', {
-            root: FIXTURES_PATH
-          })
+          res.download('name.txt',options)
         })
 
         request(app)
@@ -308,9 +314,7 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('fake/../name.txt', {
-            root: FIXTURES_PATH
-          })
+          res.download('fake/../name.txt',options)
         })
 
         request(app)
@@ -328,9 +332,7 @@ describe('res', function(){
           var p = '..' + path.sep +
             path.relative(path.dirname(FIXTURES_PATH), path.join(FIXTURES_PATH, 'name.txt'))
 
-          res.download(p, {
-            root: FIXTURES_PATH
-          })
+          res.download(p,options)
         })
 
         request(app)
@@ -344,9 +346,7 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('../name.txt', {
-            root: FIXTURES_PATH
-          })
+          res.download('../name.txt', options)
         })
 
         request(app)
@@ -364,7 +364,7 @@ describe('res', function(){
       var cb = after(2, done);
 
       app.use(function(req, res){
-        res.download('test/fixtures/user.html', 'document', cb)
+        res.download('user.html', 'document',options, cb)
       });
 
       request(app)
@@ -379,10 +379,12 @@ describe('res', function(){
     it('should invoke the callback', function (done) {
       var app = express()
       var cb = after(2, done)
-      var options = {}
+      var options = {
+        root: FIXTURES_PATH
+      }
 
       app.use(function (req, res) {
-        res.download('test/fixtures/user.html', 'document', options, cb)
+        res.download('user.html', 'document', options, cb)
       })
 
       request(app)
@@ -397,7 +399,8 @@ describe('res', function(){
       var app = express()
 
       app.use(function (req, res) {
-        res.download('test/fixtures/.name', 'document', {
+        res.download('.name', 'document', {
+          root: FIXTURES_PATH,
           dotfiles: 'allow',
           maxAge: '4h'
         })
@@ -417,7 +420,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('test/fixtures/user.html', 'document', {
+          res.download('user.html', 'document', {
+            root: FIXTURES_PATH,
             headers: {
               'Content-Type': 'text/x-custom',
               'Content-Disposition': 'inline'
@@ -437,7 +441,8 @@ describe('res', function(){
         var app = express()
 
         app.use(function (req, res) {
-          res.download('test/fixtures/user.html', 'document', {
+          res.download('user.html', 'document', {
+            root: FIXTURES_PATH,
             headers: {
               'content-type': 'text/x-custom',
               'content-disposition': 'inline'
@@ -460,7 +465,7 @@ describe('res', function(){
       var app = express();
 
       app.use(function (req, res, next) {
-        res.download('test/fixtures/foobar.html', function(err){
+        res.download('foobar.html', options, function(err){
           if (!err) return next(new Error('expected error'));
           res.send('got ' + err.status + ' ' + err.code);
         });
@@ -475,7 +480,7 @@ describe('res', function(){
       var app = express()
 
       app.use(function (req, res, next) {
-        res.download('test/fixtures/foobar.html', function(err){
+        res.download('foobar.html', options, function(err){
           if (!err) return next(new Error('expected error'));
           res.end('failed');
         });
